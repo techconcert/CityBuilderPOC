@@ -1,0 +1,15 @@
+# Python
+__pycache__/
+*.pyc
+
+# Node
+node_modules/
+npm-debug.log*
+
+# Editors and OS
+.DS_Store
+.vscode/
+.idea/
+
+# Local Three.js copy, if you download it for offline play (remove this line to commit it)
+vendor/three.module.js

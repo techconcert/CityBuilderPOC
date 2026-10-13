@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Ember Isle</title>
+<style>
+:root {
+  --bg: #0e1218;
+  --panel: rgba(22, 27, 36, 0.92);
+  --panel-edge: #2c3544;
+  --ink: #e8eef2;
+  --muted: #93a0b2;
+  --ember: #ffb347;
+  --ember-dim: #b9722a;
+  --good: #7fd49a;
+  --bad: #ff6b5b;
+  --radius: 10px;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; background: var(--bg); color: var(--ink);
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; overflow: hidden; touch-action: none; user-select: none; -webkit-user-select: none; }
+#view { position: fixed; inset: 0; }
+#view canvas { display: block; width: 100%; height: 100%; touch-action: none; }
+
+#hud { position: fixed; top: 0; left: 0; right: 0; display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center;
+  padding: 8px 12px; background: linear-gradient(to bottom, rgba(10,13,18,.88), rgba(10,13,18,0)); pointer-events: none; z-index: 5; }
+#hud > * { pointer-events: auto; }
+.chip { display: inline-flex; align-items: center; gap: 6px; padding: 5px 10px; background: var(--panel); border: 1px solid var(--panel-edge);
+  border-radius: 999px; font-weight: 600; font-variant-numeric: tabular-nums; font-size: 15px; white-space: nowrap; }
+.chip .ic { font-size: 16px; }
+.chip.flash { animation: flash .5s ease-out; }
+@keyframes flash { 0% { box-shadow: 0 0 0 0 rgba(255,179,71,.9); } 100% { box-shadow: 0 0 0 10px rgba(255,179,71,0); } }
+#clock { color: var(--ember); }
+.spacer { flex: 1 1 0; min-width: 0; }
+#speeds { display: inline-flex; gap: 4px; }
+#speeds button { font: inherit; font-weight: 700; font-size: 14px; padding: 6px 11px; border-radius: 8px; color: var(--ink);
+  background: var(--panel); border: 1px solid var(--panel-edge); cursor: pointer; min-width: 44px; min-height: 34px; }
+#speeds button:hover { border-color: var(--ember-dim); }
+#speeds button.active { background: var(--ember); color: #2a1a05; border-color: var(--ember); }
+
+#panel { position: fixed; top: 64px; right: 12px; width: 280px; max-height: calc(100% - 84px); overflow: auto; padding: 14px;
+  background: var(--panel); border: 1px solid var(--panel-edge); border-radius: var(--radius); z-index: 6; display: none;
+  box-shadow: 0 8px 28px rgba(0,0,0,.45); }
+#panel.open { display: block; }
+#panel h2 { margin: 0 0 2px; font-size: 18px; color: var(--ember); }
+#panel .sub { color: var(--muted); font-size: 13px; margin-bottom: 8px; }
+#panel .row { display: flex; justify-content: space-between; gap: 8px; font-size: 14px; padding: 3px 0; border-bottom: 1px solid rgba(255,255,255,.06); }
+#panel .row span:first-child { color: var(--muted); }
+#panel .close { position: absolute; top: 8px; right: 10px; background: none; border: 0; color: var(--muted); font-size: 20px; cursor: pointer; line-height: 1; padding: 4px 8px; }
+.btn { display: block; width: 100%; margin-top: 10px; padding: 10px 12px; font: inherit; font-weight: 700; color: #2a1a05; background: var(--ember);
+  border: 0; border-radius: 8px; cursor: pointer; text-align: left; min-height: 44px; }
+.btn:hover:not(:disabled) { filter: brightness(1.08); }
+.btn:disabled { background: #2b3342; color: var(--muted); cursor: not-allowed; }
+.btn .cost { display: block; font-weight: 600; font-size: 13px; margin-top: 2px; }
+.btn .cost .short { color: var(--bad); }
+.btn:not(:disabled) .cost { color: #4a2c08; }
+.maxlabel { margin-top: 10px; padding: 10px; text-align: center; font-weight: 800; letter-spacing: .12em; color: var(--good); border: 1px dashed var(--good); border-radius: 8px; }
+.note { color: var(--muted); font-size: 13px; margin-top: 8px; }
+
+#tooltip { position: fixed; z-index: 7; pointer-events: none; display: none; min-width: 150px; padding: 8px 10px; font-size: 13px;
+  background: var(--panel); border: 1px solid var(--panel-edge); border-radius: 8px; }
+#tooltip b { color: var(--ember); }
+.bar { height: 6px; background: #2b3342; border-radius: 3px; margin: 3px 0 5px; overflow: hidden; }
+.bar > i { display: block; height: 100%; background: var(--good); }
+.bar.hunger > i { background: var(--ember); }
+
+#banner { position: fixed; left: 50%; top: 18%; transform: translateX(-50%); z-index: 8; display: none; padding: 16px 26px; text-align: center;
+  font-size: clamp(18px, 4vw, 28px); font-weight: 800; color: #2a1a05; background: var(--ember); border-radius: 14px; box-shadow: 0 10px 40px rgba(255,179,71,.45); cursor: pointer; max-width: 92vw; }
+#banner small { display: block; font-size: 13px; font-weight: 600; opacity: .75; margin-top: 4px; }
+#hint { position: fixed; left: 12px; bottom: 10px; z-index: 4; color: var(--muted); font-size: 12px; pointer-events: none; }
+#nogl { position: fixed; inset: 0; display: none; align-items: center; justify-content: center; text-align: center; padding: 24px; z-index: 20; background: var(--bg); font-size: 18px; line-height: 1.5; }
+
+@media (max-width: 640px) {
+  #hud { gap: 6px 6px; padding: 6px 8px; }
+  .chip { font-size: 13px; padding: 4px 8px; }
+  .spacer { display: none; }
+  #speeds { margin-left: auto; }
+  #speeds button { padding: 5px 8px; min-width: 38px; }
+  #panel { top: auto; bottom: 0; left: 0; right: 0; width: auto; max-height: 52%; border-radius: var(--radius) var(--radius) 0 0; }
+  #hint { display: none; }
+}
+</style>
+</head>
+<body>
+<div id="view"></div>
+
+<div id="hud">
+  <span class="chip" id="c-wood" title="Wood"><span class="ic">🪵</span><span id="v-wood">0</span></span>
+  <span class="chip" id="c-fish" title="Fish"><span class="ic">🐟</span><span id="v-fish">0</span></span>
+  <span class="chip" id="c-meals" title="Meals"><span class="ic">🍲</span><span id="v-meals">0</span></span>
+  <span class="chip" id="c-pop" title="Population / bed capacity"><span class="ic">👥</span><span id="v-pop">0/0</span></span>
+  <span class="spacer"></span>
+  <span class="chip" id="clock"><span class="ic" id="v-sun">☀️</span><span id="v-time">Day 1 06:00</span></span>
+  <span id="speeds">
+    <button data-speed="0" title="Pause">Pause</button>
+    <button data-speed="1" class="active">1x</button>
+    <button data-speed="2">2x</button>
+    <button data-speed="4">4x</button>
+  </span>
+</div>
+
+<div id="panel" role="dialog" aria-live="polite"></div>
+<div id="tooltip"></div>
+<div id="banner"></div>
+<div id="hint">Drag to pan · wheel or pinch to zoom · click a building or a + plot · Esc closes</div>
+<div id="nogl">Ember Isle needs WebGL, which is not available in this browser.<br>Try a recent Chrome, Firefox, Edge or Safari with hardware acceleration enabled.</div>
+
+<!-- Three.js is loaded from a CDN below. To run fully offline: download
+     https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js to ./vendor/three.module.js
+     and change the URL in the importmap to "./vendor/three.module.js". -->
+<script type="importmap">
+{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js"}}
+</script>
+<script type="module" src="./game.js"></script>
+</body>
+</html>
