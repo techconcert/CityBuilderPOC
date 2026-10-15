@@ -19,6 +19,12 @@ The POC deliberately keeps scope small. It leaves out the central generator/upgr
 - **Current art is procedural low-poly:** everything is built from Three.js primitives in code, with no image or model files.
 - **AI-generated isometric graphics** are the intended direction for the project, but are not in the code yet.
 
+## Screenshots
+
+| Early game | Built up |
+| --- | --- |
+| ![Early game](docs/screenshots/early-game.png) | ![Built-up settlement](docs/screenshots/built-up.png) |
+
 ## Status
 
 🧪 **Proof of concept (v0.2.0).** Expect rough edges and breaking changes. See [CHANGELOG.md](CHANGELOG.md).
